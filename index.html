@@ -116,6 +116,14 @@ nav {
   align-items: baseline; transition: all 0.25s var(--ease);
   cursor: default;
 }
+.pain-header {
+  display: grid; grid-template-columns: 100px 1fr;
+  padding: 0.5rem 0; margin-bottom: 0;
+}
+.pain-num-label, .pain-text-label {
+  font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
 .pain-row:first-child { border-top: 1px solid var(--border-dim); }
 .pain-row:hover { background: var(--surface-hover); padding-left: 1rem; padding-right: 1rem; }
 .pain-num {
@@ -354,6 +362,10 @@ footer {
     <h2 class="section-title">Students are picking blind.</h2>
     <p class="section-sub">We analyzed 114 posts on r/unsw. The same pain shows up every semester.</p>
 
+    <div class="pain-header">
+      <span class="pain-num-label">Upvotes</span>
+      <span class="pain-text-label">What students are saying on r/unsw</span>
+    </div>
     <div class="pain-row">
       <span class="pain-num">417</span>
       <span class="pain-text">"Missed a final exam due to stupidity" <em>&mdash; wrong course, wrong time</em></span>

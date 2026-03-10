@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniMate — AI-Powered Course Selection for UNSW</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #111111;
+  --surface: rgba(255,255,255,0.03);
+  --surface-hover: rgba(255,255,255,0.06);
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.12);
+  --border-dim: rgba(255,255,255,0.06);
+  --text: #ffffff;
+  --text-sec: #b0b0b0;
+  --text-muted: #666666;
+  --text-dim: #444444;
+  --accent: #4F8EFF;
+  --accent-glow: rgba(79,142,255,0.15);
+  --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'Courier New', Courier, monospace;
+  --ease: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-bounce: cubic-bezier(.175, .885, .32, 1.275);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-sec);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--accent); color: #000; }
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.5rem 2.5rem;
+  background: rgba(17,17,17,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-dim);
+}
+.nav-logo { font-size: 1.1rem; font-weight: 500; color: var(--text); letter-spacing: -0.02em; }
+.nav-logo span { color: var(--text-muted); font-weight: 400; margin-left: 0.5rem; font-size: 0.75rem; }
+.nav-tag {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent); border: 1px solid rgba(79,142,255,0.3);
+  padding: 0.3rem 0.8rem; border-radius: 999px;
+}
+
+/* ─── SECTION SYSTEM ─── */
+.section { padding: 6rem 0; border-top: 1px solid var(--border-dim); }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 2.5rem; }
+
+.section-num {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
+  display: block;
+}
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 500; color: var(--text);
+  letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 1rem;
+}
+.section-sub {
+  font-size: 1rem; color: var(--text-muted); max-width: 560px;
+  line-height: 1.7; margin-bottom: 3rem;
+}
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  position: relative; overflow: hidden; padding-top: 80px;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+}
+.hero-bg canvas { width: 100%; height: 100%; }
+.hero-content { position: relative; z-index: 2; width: 100%; }
+.hero-label {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin-bottom: 1.5rem; display: block;
+}
+.hero h1 {
+  font-size: clamp(4rem, 10vw, 8rem); font-weight: 500;
+  line-height: 0.9; letter-spacing: -0.05em; color: var(--text);
+  margin-bottom: 1.5rem;
+}
+.hero h1 .thin { font-weight: 300; color: var(--text-sec); }
+.hero-desc {
+  font-size: 1.25rem; color: var(--text-sec); max-width: 520px;
+  line-height: 1.6; font-weight: 300; margin-bottom: 2.5rem;
+}
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text); text-decoration: none;
+  border: 1px solid var(--border); padding: 0.75rem 1.5rem;
+  border-radius: 999px; transition: all 0.3s var(--ease);
+}
+.hero-cta:hover { background: var(--text); color: var(--bg); }
+
+/* ─── PAIN POINTS (data rows) ─── */
+.pain-row {
+  display: grid; grid-template-columns: 100px 1fr;
+  padding: 1.25rem 0; border-bottom: 1px solid var(--border-dim);
+  align-items: baseline; transition: all 0.25s var(--ease);
+  cursor: default;
+}
+.pain-row:first-child { border-top: 1px solid var(--border-dim); }
+.pain-row:hover { background: var(--surface-hover); padding-left: 1rem; padding-right: 1rem; }
+.pain-num {
+  font-family: var(--mono); font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 400; color: var(--text); letter-spacing: -0.03em;
+}
+.pain-text { font-size: 0.95rem; color: var(--text-sec); }
+.pain-text em { color: var(--text-muted); font-style: normal; font-size: 0.8rem; }
+.pain-source {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim);
+  margin-top: 1.5rem;
+}
+.pain-punchline {
+  font-size: 1.35rem; color: var(--text); font-weight: 400;
+  margin-top: 2.5rem; letter-spacing: -0.01em;
+}
+
+/* ─── FEATURES ─── */
+.feat-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; background: var(--border-dim);
+  border: 1px solid var(--border-dim); border-radius: 12px;
+  overflow: hidden;
+}
+.feat-card {
+  background: var(--bg); padding: 2.5rem;
+  position: relative; transition: background 0.3s var(--ease);
+}
+.feat-card:hover { background: var(--surface-hover); }
+.feat-card::before {
+  content: attr(data-idx); font-family: var(--mono); font-size: 0.65rem;
+  color: var(--text-dim); position: absolute; top: 1.25rem; right: 1.25rem;
+}
+.feat-card h3 {
+  font-size: 1.1rem; font-weight: 500; color: var(--text);
+  margin-bottom: 0.5rem; letter-spacing: -0.01em;
+}
+.feat-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
+.ai-pill {
+  display: inline-block; font-family: var(--mono); font-size: 0.6rem;
+  color: var(--accent); background: var(--accent-glow);
+  padding: 0.2rem 0.6rem; border-radius: 4px; margin-top: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+/* ─── KILLER MOMENTS ─── */
+.moment {
+  padding: 2.5rem 0; border-bottom: 1px solid var(--border-dim);
+}
+.moment:first-child { border-top: 1px solid var(--border-dim); }
+.moment-quote {
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 400; color: var(--text);
+  letter-spacing: -0.02em; margin-bottom: 0.5rem; line-height: 1.35;
+}
+.moment-quote .hl {
+  background: linear-gradient(135deg, transparent 44%, rgba(79,142,255,0.12) 50%, transparent 56%);
+  background-size: 250% 100%;
+  animation: shimmer 3s ease infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.moment-desc {
+  font-size: 0.85rem; color: var(--text-muted); max-width: 560px; line-height: 1.7;
+}
+
+/* ─── COMPARISON ─── */
+.cmp-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 2rem; margin-bottom: 2.5rem;
+}
+.cmp-col { display: flex; flex-direction: column; gap: 0; }
+.cmp-header {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0.75rem 0; border-bottom: 2px solid;
+  margin-bottom: 0;
+}
+.cmp-header.old { color: var(--text-dim); border-color: var(--text-dim); }
+.cmp-header.new { color: var(--accent); border-color: var(--accent); }
+.cmp-item {
+  font-size: 0.85rem; padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+.cmp-item .dim { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.05em; display: block; margin-bottom: 0.15rem; }
+.cmp-col.old .cmp-item { color: var(--text-dim); }
+.cmp-col.new .cmp-item { color: var(--text-sec); }
+
+.callout-box {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 8px; padding: 1.5rem; font-size: 0.875rem;
+  color: var(--text-muted); line-height: 1.75;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.callout-box strong { color: var(--text-sec); font-weight: 500; }
+
+/* ─── STATS ROW ─── */
+.stat-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border-dim);
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 2.5rem;
+}
+.stat-box {
+  padding: 2rem 1.5rem;
+  border-right: 1px solid var(--border-dim);
+}
+.stat-box:last-child { border-right: none; }
+.stat-val {
+  font-family: var(--mono); font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400; color: var(--accent); letter-spacing: -0.03em;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+.proof-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 2rem; }
+.proof-list li {
+  font-size: 0.85rem; color: var(--text-muted);
+  padding-left: 1rem; position: relative;
+}
+.proof-list li::before {
+  content: ''; position: absolute; left: 0; top: 0.55rem;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+}
+
+.head-note {
+  font-size: 0.925rem; color: var(--text-muted); line-height: 1.8;
+  border-left: 2px solid var(--border-dim); padding-left: 1.25rem;
+}
+.head-link {
+  display: block; font-family: var(--mono); font-size: 0.75rem;
+  color: var(--text-dim); margin-top: 1.5rem;
+}
+.head-link a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+.head-link a:hover { color: var(--text); }
+
+/* ─── ROADMAP ─── */
+.road-grid { display: flex; flex-direction: column; gap: 0; }
+.road-item {
+  display: grid; grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid var(--border-dim); padding: 1.25rem 0;
+  align-items: baseline;
+}
+.road-item:first-child { border-top: 1px solid var(--border-dim); }
+.road-phase {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.road-phase .done { color: var(--accent); }
+.road-content h4 { font-size: 0.95rem; font-weight: 500; color: var(--text); margin-bottom: 0.2rem; }
+.road-content p { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ─── AUDIENCE ─── */
+.aud-stat {
+  display: flex; align-items: baseline; gap: 1rem; margin-top: 1rem;
+}
+.aud-num {
+  font-family: var(--mono); font-size: clamp(3.5rem, 7vw, 5rem);
+  font-weight: 400; color: var(--text); letter-spacing: -0.04em;
+}
+.aud-label { font-size: 1rem; color: var(--text-muted); }
+
+/* ─── BUILD ─── */
+.build-rows { display: flex; flex-direction: column; }
+.build-row {
+  display: grid; grid-template-columns: 200px 1fr;
+  padding: 1rem 0; border-bottom: 1px solid var(--border-dim);
+  align-items: baseline; transition: all 0.25s var(--ease);
+}
+.build-row:first-child { border-top: 1px solid var(--border-dim); }
+.build-row:hover { background: var(--surface-hover); padding-left: 1rem; padding-right: 1rem; }
+.build-row h4 { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+.build-row p { font-size: 0.85rem; color: var(--text-muted); }
+
+/* ─── FOOTER ─── */
+footer {
+  padding: 4rem 0; border-top: 1px solid var(--border-dim); text-align: center;
+}
+.foot-brand { font-size: 1.1rem; font-weight: 500; color: var(--text); margin-bottom: 0.35rem; }
+.foot-sub { font-size: 0.75rem; color: var(--text-dim); }
+
+/* ─── REVEAL ─── */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  nav { padding: 1rem 1.5rem; }
+  .container { padding: 0 1.5rem; }
+  .section { padding: 4rem 0; }
+  .feat-grid { grid-template-columns: 1fr; }
+  .cmp-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-box:nth-child(2) { border-right: none; }
+  .pain-row { grid-template-columns: 70px 1fr; }
+  .road-item { grid-template-columns: 1fr; gap: 0.25rem; }
+  .build-row { grid-template-columns: 1fr; gap: 0.25rem; }
+  .aud-stat { flex-direction: column; gap: 0.25rem; }
+  .hero h1 { font-size: clamp(3rem, 12vw, 5rem); }
+}
+@media (max-width: 480px) {
+  .container { padding: 0 1rem; }
+  .stat-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">UniMate <span>v0.1</span></div>
+  <div class="nav-tag">AISoc 2026 Project Proposal</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"><canvas id="grid-canvas"></canvas></div>
+  <div class="container">
+    <div class="hero-content">
+      <span class="hero-label">UNSW AI Society &mdash; Project 2</span>
+      <h1>Smart<br><span class="thin">Course Selection.</span></h1>
+      <p class="hero-desc">AI that knows your grades, your goals, and every course at UNSW &mdash; then builds your perfect semester.</p>
+      <a href="#problem" class="hero-cta">See the vision</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 PROBLEM -->
+<section class="section" id="problem">
+  <div class="container reveal">
+    <span class="section-num">01 &mdash; The Problem</span>
+    <h2 class="section-title">Students are picking blind.</h2>
+    <p class="section-sub">We analyzed 114 posts on r/unsw. The same pain shows up every semester.</p>
+
+    <div class="pain-row">
+      <span class="pain-num">417</span>
+      <span class="pain-text">"Missed a final exam due to stupidity" <em>&mdash; wrong course, wrong time</em></span>
+    </div>
+    <div class="pain-row">
+      <span class="pain-num">334</span>
+      <span class="pain-text">"Failed today by missing a test worth 10%"</span>
+    </div>
+    <div class="pain-row">
+      <span class="pain-num">220</span>
+      <span class="pain-text">"Is my timetable cooked chat?"</span>
+    </div>
+    <div class="pain-row">
+      <span class="pain-num">182</span>
+      <span class="pain-text">"Do NOT enrol in Cyber Security" <em>&mdash; zero course intelligence</em></span>
+    </div>
+    <div class="pain-row">
+      <span class="pain-num">79</span>
+      <span class="pain-text">WAM Calculator website &mdash; requested but never built</span>
+    </div>
+
+    <p class="pain-source">Source: r/unsw, 114 posts, 2023&ndash;2025</p>
+    <p class="pain-punchline">No tool connects your grades, your goals, and the full course catalog. We fix that.</p>
+  </div>
+</section>
+
+<!-- 02 SOLUTION -->
+<section class="section" id="features">
+  <div class="container reveal">
+    <span class="section-num">02 &mdash; What UniMate Does</span>
+    <h2 class="section-title">One platform. Four core features.</h2>
+    <p class="section-sub">AI-powered course selection that actually understands UNSW.</p>
+
+    <div class="feat-grid">
+      <div class="feat-card" data-idx="01">
+        <h3>AI Course Advisor</h3>
+        <p>Analyzes your WAM, progression requirements, workload tolerance, and career goals. Recommends optimal course combinations per semester &mdash; fully personalized.</p>
+        <span class="ai-pill">AI: recommendation engine</span>
+      </div>
+      <div class="feat-card" data-idx="02">
+        <h3>Timetable Optimizer</h3>
+        <p>Full course catalog from myUNSW JSON API &mdash; every course, every section, every time slot. Constraint solver: no 8am, Fridays off, minimize gaps. Computed, not drag-and-drop.</p>
+        <span class="ai-pill">AI: constraint optimization</span>
+      </div>
+      <div class="feat-card" data-idx="03">
+        <h3>Vacancy Sniper</h3>
+        <p>Real-time monitoring of enrollment data via myUNSW API. The second a full class opens a spot, you get notified. React in seconds, not hours of refreshing.</p>
+      </div>
+      <div class="feat-card" data-idx="04">
+        <h3>Course Intelligence</h3>
+        <p>AI-aggregated reviews, difficulty scores, workload data, and grade distributions. Make informed decisions &mdash; not guesses based on one friend's opinion.</p>
+        <span class="ai-pill">AI: sentiment analysis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 KILLER MOMENTS -->
+<section class="section" id="moments">
+  <div class="container reveal">
+    <span class="section-num">03 &mdash; The Moments That Sell It</span>
+    <h2 class="section-title">Features you feel.</h2>
+
+    <div class="moment">
+      <div class="moment-quote">"Show me a timetable with <span class="hl">no 8am and Fridays off</span>."</div>
+      <div class="moment-desc">Type your constraints in natural language. The optimizer ingests the complete myUNSW catalog and solves it in seconds.</div>
+    </div>
+    <div class="moment">
+      <div class="moment-quote">"COMP2521 just opened up &mdash; <span class="hl">1 spot</span>."</div>
+      <div class="moment-desc">Vacancy Sniper monitors enrollment in real time. One dropout = instant push notification. You claim it before anyone else.</div>
+    </div>
+    <div class="moment">
+      <div class="moment-quote">"What should I take next semester if I want to <span class="hl">raise my WAM by 5</span>?"</div>
+      <div class="moment-desc">AI Course Advisor cross-references your grades, remaining requirements, and historical difficulty data to find your optimal path.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 DIFFERENT -->
+<section class="section" id="different">
+  <div class="container reveal">
+    <span class="section-num">04 &mdash; Why This Is Different</span>
+    <h2 class="section-title">Not another scraper.</h2>
+
+    <div class="cmp-grid">
+      <div class="cmp-col old">
+        <div class="cmp-header old">Existing Tools</div>
+        <div class="cmp-item"><span class="dim">Data</span> Scraped HTML, incomplete</div>
+        <div class="cmp-item"><span class="dim">Scope</span> Single-purpose, isolated</div>
+        <div class="cmp-item"><span class="dim">AI</span> None</div>
+        <div class="cmp-item"><span class="dim">Audience</span> CS students only</div>
+        <div class="cmp-item"><span class="dim">Updates</span> Periodic scrapes</div>
+      </div>
+      <div class="cmp-col new">
+        <div class="cmp-header new">UniMate</div>
+        <div class="cmp-item"><span class="dim">Data</span> Direct API, 100% coverage</div>
+        <div class="cmp-item"><span class="dim">Scope</span> Unified, connected data</div>
+        <div class="cmp-item"><span class="dim">AI</span> AI-native, every feature</div>
+        <div class="cmp-item"><span class="dim">Audience</span> All 50,000 UNSW students</div>
+        <div class="cmp-item"><span class="dim">Updates</span> Real-time authenticated APIs</div>
+      </div>
+    </div>
+
+    <div class="callout-box">
+      UniMate authenticates directly with <strong>myUNSW and Moodle APIs</strong> &mdash; 27 + 22 endpoints &mdash; getting every course, every class, every grade. No scraping. No guessing.
+    </div>
+  </div>
+</section>
+
+<!-- 05 HEAD START -->
+<section class="section" id="headstart">
+  <div class="container reveal">
+    <span class="section-num">05 &mdash; Our Head Start</span>
+    <h2 class="section-title">Research done. Let's build.</h2>
+
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val">27</div>
+        <div class="stat-label">myUNSW API endpoints</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">22</div>
+        <div class="stat-label">Moodle AJAX APIs</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">30</div>
+        <div class="stat-label">Microsoft Graph scopes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">79</div>
+        <div class="stat-label">Total endpoints mapped</div>
+      </div>
+    </div>
+
+    <ul class="proof-list">
+      <li>Authentication flows for myUNSW + Moodle fully verified</li>
+      <li>Complete course catalog extraction tested with real data</li>
+      <li>WAM calculation logic prototyped and validated</li>
+      <li>API documentation published as open source (MIT)</li>
+    </ul>
+
+    <p class="head-note">Most student projects spend weeks fighting undocumented APIs. We've already mapped 79 endpoints across 4 university systems. The team starts building features from week one.</p>
+
+    <span class="head-link">Open source: <a href="https://github.com/Genius-Cai/myunsw-cli" target="_blank">github.com/Genius-Cai/myunsw-cli</a></span>
+  </div>
+</section>
+
+<!-- 06 ROADMAP -->
+<section class="section" id="roadmap">
+  <div class="container reveal">
+    <span class="section-num">06 &mdash; Roadmap</span>
+    <h2 class="section-title">6 weeks to launch.</h2>
+
+    <div class="road-grid">
+      <div class="road-item">
+        <div class="road-phase"><span class="done">Phase 0 &mdash; Done</span></div>
+        <div class="road-content">
+          <h4>API Research &amp; Proof of Concept</h4>
+          <p>79 endpoints documented. Auth verified. Core logic prototyped.</p>
+        </div>
+      </div>
+      <div class="road-item">
+        <div class="road-phase">Phase 1 &mdash; Wk 1&ndash;2</div>
+        <div class="road-content">
+          <h4>Platform Foundation</h4>
+          <p>Next.js app, auth flow, backend API service, course data pipeline.</p>
+        </div>
+      </div>
+      <div class="road-item">
+        <div class="road-phase">Phase 2 &mdash; Wk 3&ndash;4</div>
+        <div class="road-content">
+          <h4>Core Features</h4>
+          <p>Timetable optimizer, vacancy sniper, course intelligence dashboard.</p>
+        </div>
+      </div>
+      <div class="road-item">
+        <div class="road-phase">Phase 3 &mdash; Wk 5&ndash;6</div>
+        <div class="road-content">
+          <h4>AI Layer</h4>
+          <p>Course advisor engine, natural language constraints, recommendation system.</p>
+        </div>
+      </div>
+      <div class="road-item">
+        <div class="road-phase">Phase 4 &mdash; T2+</div>
+        <div class="road-content">
+          <h4>Scale &amp; Launch</h4>
+          <p>Mobile support, course reviews community, university partnership, AICon demo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 AUDIENCE -->
+<section class="section" id="audience">
+  <div class="container reveal">
+    <span class="section-num">07 &mdash; For Every Student</span>
+    <h2 class="section-title">Not just CS.</h2>
+    <p class="section-sub">Business students picking electives. Engineering students juggling prereqs. International students navigating an unfamiliar system. Every faculty, every year.</p>
+    <div class="aud-stat">
+      <span class="aud-num">50,000+</span>
+      <span class="aud-label">students across every UNSW faculty</span>
+    </div>
+  </div>
+</section>
+
+<!-- 08 BUILD -->
+<section class="section" id="build">
+  <div class="container reveal">
+    <span class="section-num">08 &mdash; What You'll Build</span>
+    <h2 class="section-title">Real engineering challenges.</h2>
+    <p class="section-sub">This isn't a tutorial project. Here's what the team ships.</p>
+
+    <div class="build-rows">
+      <div class="build-row">
+        <h4>Backend API</h4>
+        <p>FastAPI service integrating 4 university systems with auth management</p>
+      </div>
+      <div class="build-row">
+        <h4>Scheduling Engine</h4>
+        <p>Constraint satisfaction solver for timetable optimization</p>
+      </div>
+      <div class="build-row">
+        <h4>AI/ML Pipeline</h4>
+        <p>Recommendation engine, embeddings, local inference on RTX 4090</p>
+      </div>
+      <div class="build-row">
+        <h4>Frontend</h4>
+        <p>Next.js web app &mdash; Windows, Mac, Linux, mobile. One codebase.</p>
+      </div>
+      <div class="build-row">
+        <h4>Infrastructure</h4>
+        <p>Docker, CI/CD, monitoring, production deployment</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p class="foot-brand">UniMate</p>
+    <p class="foot-sub">AISoc 2026 &mdash; Project 2</p>
+    <p class="foot-sub">Built by UNSW AI Society</p>
+  </div>
+</footer>
+
+<script>
+// Grid canvas animation
+const canvas = document.getElementById('grid-canvas');
+const ctx = canvas.getContext('2d');
+let w, h, time = 0;
+
+function resize() {
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function draw() {
+  ctx.fillStyle = '#111111';
+  ctx.fillRect(0, 0, w, h);
+  const gridSize = 40;
+  const cols = Math.ceil(w / gridSize);
+  const rows = Math.ceil(h / gridSize);
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const cx = x * gridSize + gridSize / 2;
+      const cy = y * gridSize + gridSize / 2;
+      const dx = (cx - w / 2) / (w / 2);
+      const dy = (cy - h / 2) / (h / 2);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const wave = Math.sin(dist * 4 - time * 0.8) * 0.5 + 0.5;
+      const alpha = wave * 0.12 * (1 - dist * 0.5);
+
+      if (alpha > 0.01) {
+        ctx.fillStyle = `rgba(79, 142, 255, ${alpha})`;
+        ctx.fillRect(x * gridSize, y * gridSize, 1, 1);
+      }
+
+      // Grid lines
+      ctx.strokeStyle = `rgba(255, 255, 255, 0.025)`;
+      ctx.strokeRect(x * gridSize, y * gridSize, gridSize, gridSize);
+    }
+  }
+  time += 0.02;
+  requestAnimationFrame(draw);
+}
+draw();
+
+// Reveal on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
